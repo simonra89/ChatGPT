@@ -4,6 +4,9 @@ const capitalIncomeInput = document.getElementById("capital-income");
 const shareGainInput = document.getElementById("share-gain");
 const shareLossInput = document.getElementById("share-loss");
 const generalDeductionsInput = document.getElementById("general-deductions");
+const netWealthInput = document.getElementById("net-wealth");
+const ageGroupInput = document.getElementById("age-group");
+const regionInput = document.getElementById("region");
 const calculateButton = document.getElementById("calculate");
 
 const ordinaryIncomeEl = document.getElementById("ordinary-income");
@@ -11,23 +14,46 @@ const totalTaxEl = document.getElementById("total-tax");
 const effectiveRateEl = document.getElementById("effective-rate");
 const afterTaxIncomeEl = document.getElementById("after-tax-income");
 const breakdownListEl = document.getElementById("breakdown-list");
-const rateWarningEl = document.getElementById("rate-warning");
 const ratesSummaryEl = document.getElementById("rates-summary");
 
 const taxConfig2026 = {
-  ordinaryIncomeRate: null,
-  shareAdjustmentFactor: null,
-  socialSecurity: {
-    wageRate: null,
-    pensionRate: null,
+  ordinaryIncome: {
+    rate: 0.22,
+    rateTromsFinnmark: 0.185,
   },
-  stepTax: [
-    { min: 0, max: null, rate: null },
-    { min: null, max: null, rate: null },
-    { min: null, max: null, rate: null },
-    { min: null, max: null, rate: null },
-    { min: null, max: Infinity, rate: null },
+  allowances: {
+    personfradragClass1: 114540,
+  },
+  minstefradrag: {
+    wage: { rate: 0.46, max: 95700 },
+    pension: { rate: 0.4, max: 91350 },
+  },
+  trinnskatt: [
+    { min: 0, max: 226100, rate: 0.0 },
+    { min: 226100, max: 318300, rate: 0.017 },
+    { min: 318300, max: 725050, rate: 0.04 },
+    { min: 725050, max: 980100, rate: 0.137 },
+    { min: 980100, max: 1467200, rate: 0.168 },
+    { min: 1467200, max: Infinity, rate: 0.178 },
   ],
+  trygdeavgift: {
+    lowerThreshold: 99650,
+    phaseInCapRate: 0.25,
+    rates: {
+      wageUnder17OrOver69: 0.051,
+      wage17To69: 0.076,
+      pension: 0.051,
+    },
+  },
+  wealthTax: {
+    allowance: 1900000,
+    totalRateUpTo: 0.00675,
+    totalRateAbove: 0.00875,
+    breakpoint: 21700000,
+  },
+  shareholder: {
+    upliftFactor: 1.72,
+  },
 };
 
 const currencyFormatter = new Intl.NumberFormat("nb-NO", {
@@ -49,27 +75,11 @@ const factorFormatter = new Intl.NumberFormat("nb-NO", {
 
 const parseValue = (value) => Math.max(0, Number.parseFloat(value) || 0);
 
-const isConfigComplete = () => {
-  const hasOrdinaryRate = Number.isFinite(taxConfig2026.ordinaryIncomeRate);
-  const hasShareFactor = Number.isFinite(taxConfig2026.shareAdjustmentFactor);
-  const hasSocial =
-    Number.isFinite(taxConfig2026.socialSecurity.wageRate) &&
-    Number.isFinite(taxConfig2026.socialSecurity.pensionRate);
-  const hasStepTax = taxConfig2026.stepTax.every(
-    (step) =>
-      Number.isFinite(step.min) &&
-      (Number.isFinite(step.max) || step.max === Infinity) &&
-      Number.isFinite(step.rate),
-  );
-
-  return hasOrdinaryRate && hasShareFactor && hasSocial && hasStepTax;
-};
-
 const calculateStepTax = (personIncome) => {
   const breakdown = [];
   let totalTax = 0;
 
-  taxConfig2026.stepTax.forEach(({ min, max, rate }, index) => {
+  taxConfig2026.trinnskatt.forEach(({ min, max, rate }, index) => {
     const taxableInBracket = Math.max(
       0,
       Math.min(personIncome, max) - min,
@@ -89,6 +99,41 @@ const calculateStepTax = (personIncome) => {
   return { totalTax, breakdown };
 };
 
+const calculateMinstefradrag = (income, config) => {
+  if (income <= 0) {
+    return 0;
+  }
+  return Math.min(income * config.rate, config.max);
+};
+
+const calculateTrygdeavgift = (income, rate) => {
+  const { lowerThreshold, phaseInCapRate } = taxConfig2026.trygdeavgift;
+  if (income <= lowerThreshold) {
+    return 0;
+  }
+  const rawTax = income * rate;
+  const cappedTax = phaseInCapRate * (income - lowerThreshold);
+  return Math.min(rawTax, cappedTax);
+};
+
+const calculateWealthTax = (netWealth) => {
+  if (netWealth <= taxConfig2026.wealthTax.allowance) {
+    return 0;
+  }
+  const taxableWealth = netWealth - taxConfig2026.wealthTax.allowance;
+  const baseRate = taxConfig2026.wealthTax.totalRateUpTo;
+  const aboveRate = taxConfig2026.wealthTax.totalRateAbove;
+  const breakpoint = taxConfig2026.wealthTax.breakpoint;
+
+  if (netWealth <= breakpoint) {
+    return taxableWealth * baseRate;
+  }
+
+  const taxableBelow = breakpoint - taxConfig2026.wealthTax.allowance;
+  const taxableAbove = netWealth - breakpoint;
+  return taxableBelow * baseRate + taxableAbove * aboveRate;
+};
+
 const renderResults = () => {
   const wageIncome = parseValue(wageIncomeInput.value);
   const pensionIncome = parseValue(pensionIncomeInput.value);
@@ -96,42 +141,52 @@ const renderResults = () => {
   const shareGain = parseValue(shareGainInput.value);
   const shareLoss = parseValue(shareLossInput.value);
   const generalDeductions = parseValue(generalDeductionsInput.value);
+  const netWealth = parseValue(netWealthInput.value);
+  const ageGroup = ageGroupInput.value;
+  const region = regionInput.value;
 
   const shareNet = shareGain - shareLoss;
   const adjustedShareNet =
-    shareNet * (taxConfig2026.shareAdjustmentFactor || 0);
+    shareNet * taxConfig2026.shareholder.upliftFactor;
+  const minstefradragWage = calculateMinstefradrag(
+    wageIncome,
+    taxConfig2026.minstefradrag.wage,
+  );
+  const minstefradragPension = calculateMinstefradrag(
+    pensionIncome,
+    taxConfig2026.minstefradrag.pension,
+  );
+  const personfradrag = taxConfig2026.allowances.personfradragClass1;
+  const totalDeductions =
+    generalDeductions + minstefradragWage + minstefradragPension + personfradrag;
   const ordinaryIncome =
     wageIncome +
     pensionIncome +
     capitalIncome +
     adjustedShareNet -
-    generalDeductions;
+    totalDeductions;
   const taxableOrdinaryIncome = Math.max(0, ordinaryIncome);
   const personIncome = wageIncome + pensionIncome;
 
-  if (!isConfigComplete()) {
-    ordinaryIncomeEl.textContent =
-      currencyFormatter.format(taxableOrdinaryIncome);
-    totalTaxEl.textContent = "–";
-    effectiveRateEl.textContent = "–";
-    afterTaxIncomeEl.textContent = "–";
-    breakdownListEl.innerHTML = "";
-    const listItem = document.createElement("li");
-    listItem.textContent =
-      "Satser for 2026 mangler. Oppdater app.js før du beregner skatt.";
-    breakdownListEl.appendChild(listItem);
-    return;
-  }
+  const ordinaryRate =
+    region === "troms-finnmark"
+      ? taxConfig2026.ordinaryIncome.rateTromsFinnmark
+      : taxConfig2026.ordinaryIncome.rate;
+  const ordinaryIncomeTax = taxableOrdinaryIncome * ordinaryRate;
 
-  const ordinaryIncomeTax = taxableOrdinaryIncome *
-    (taxConfig2026.ordinaryIncomeRate || 0);
+  const wageRate =
+    ageGroup === "under17-over69"
+      ? taxConfig2026.trygdeavgift.rates.wageUnder17OrOver69
+      : taxConfig2026.trygdeavgift.rates.wage17To69;
+  const pensionRate = taxConfig2026.trygdeavgift.rates.pension;
   const socialSecurityTax =
-    wageIncome * (taxConfig2026.socialSecurity.wageRate || 0) +
-    pensionIncome * (taxConfig2026.socialSecurity.pensionRate || 0);
+    calculateTrygdeavgift(wageIncome, wageRate) +
+    calculateTrygdeavgift(pensionIncome, pensionRate);
   const { totalTax: stepTaxTotal, breakdown: stepTaxBreakdown } =
     calculateStepTax(personIncome);
+  const wealthTax = calculateWealthTax(netWealth);
 
-  const totalTax = ordinaryIncomeTax + socialSecurityTax + stepTaxTotal;
+  const totalTax = ordinaryIncomeTax + socialSecurityTax + stepTaxTotal + wealthTax;
   const totalIncome =
     wageIncome + pensionIncome + capitalIncome + shareGain - shareLoss;
   const effectiveRate = totalIncome > 0 ? totalTax / totalIncome : 0;
@@ -147,16 +202,28 @@ const renderResults = () => {
     {
       label: "Skatt på alminnelig inntekt",
       amount: ordinaryIncomeTax,
-      rate: taxConfig2026.ordinaryIncomeRate,
+      rate: ordinaryRate,
       taxableInBracket: taxableOrdinaryIncome,
     },
     {
-      label: "Trygdeavgift",
-      amount: socialSecurityTax,
-      rate: null,
-      taxableInBracket: personIncome,
+      label: "Trygdeavgift lønn",
+      amount: calculateTrygdeavgift(wageIncome, wageRate),
+      rate: wageRate,
+      taxableInBracket: wageIncome,
+    },
+    {
+      label: "Trygdeavgift pensjon",
+      amount: calculateTrygdeavgift(pensionIncome, pensionRate),
+      rate: pensionRate,
+      taxableInBracket: pensionIncome,
     },
     ...stepTaxBreakdown,
+    {
+      label: "Formuesskatt",
+      amount: wealthTax,
+      rate: null,
+      taxableInBracket: netWealth,
+    },
   ].forEach((item) => {
     const listItem = document.createElement("li");
     const rateLine = Number.isFinite(item.rate)
@@ -176,22 +243,37 @@ const renderRateSummary = () => {
   const summaryItems = [
     {
       title: "Skatt på alminnelig inntekt",
-      value: taxConfig2026.ordinaryIncomeRate,
+      value: taxConfig2026.ordinaryIncome.rate,
+      format: "percent",
+    },
+    {
+      title: "Alminnelig inntekt (Troms/Finnmark)",
+      value: taxConfig2026.ordinaryIncome.rateTromsFinnmark,
       format: "percent",
     },
     {
       title: "Aksjeoppjusteringsfaktor",
-      value: taxConfig2026.shareAdjustmentFactor,
+      value: taxConfig2026.shareholder.upliftFactor,
       format: "factor",
     },
     {
       title: "Trygdeavgift lønn",
-      value: taxConfig2026.socialSecurity.wageRate,
+      value: taxConfig2026.trygdeavgift.rates.wage17To69,
       format: "percent",
     },
     {
       title: "Trygdeavgift pensjon",
-      value: taxConfig2026.socialSecurity.pensionRate,
+      value: taxConfig2026.trygdeavgift.rates.pension,
+      format: "percent",
+    },
+    {
+      title: "Formuesskatt (til 21,7 mill.)",
+      value: taxConfig2026.wealthTax.totalRateUpTo,
+      format: "percent",
+    },
+    {
+      title: "Formuesskatt (over 21,7 mill.)",
+      value: taxConfig2026.wealthTax.totalRateAbove,
       format: "percent",
     },
   ];
@@ -209,12 +291,7 @@ const renderRateSummary = () => {
   });
 };
 
-const updateWarning = () => {
-  rateWarningEl.hidden = isConfigComplete();
-};
-
 document.addEventListener("DOMContentLoaded", () => {
-  updateWarning();
   renderRateSummary();
   renderResults();
 });
