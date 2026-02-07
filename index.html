@@ -1,0 +1,74 @@
+<!doctype html>
+<html lang="no">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Skattekalkulator</title>
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <main class="app">
+      <header class="app__header">
+        <h1>Skattekalkulator</h1>
+        <p>
+          Beregn omtrentlig skatt med en enkel, progressiv modell. Denne
+          kalkulatoren er kun veiledende og erstatter ikke offisielle beregninger.
+        </p>
+      </header>
+
+      <section class="card">
+        <h2>Inntekt</h2>
+        <div class="form-grid">
+          <label class="field">
+            Årsinntekt (brutto)
+            <input id="income" type="number" min="0" step="1000" value="600000" />
+          </label>
+          <label class="field">
+            Fradrag
+            <input id="deductions" type="number" min="0" step="500" value="50000" />
+          </label>
+        </div>
+        <button id="calculate" class="primary">Beregn skatt</button>
+      </section>
+
+      <section class="card">
+        <h2>Resultat</h2>
+        <div class="result-grid">
+          <div class="result">
+            <span class="result__label">Skattepliktig inntekt</span>
+            <strong id="taxable-income">–</strong>
+          </div>
+          <div class="result">
+            <span class="result__label">Total skatt</span>
+            <strong id="total-tax">–</strong>
+          </div>
+          <div class="result">
+            <span class="result__label">Effektiv skattesats</span>
+            <strong id="effective-rate">–</strong>
+          </div>
+          <div class="result">
+            <span class="result__label">Etter skatt</span>
+            <strong id="after-tax-income">–</strong>
+          </div>
+        </div>
+        <div class="breakdown">
+          <h3>Skattefordeling</h3>
+          <ul id="breakdown-list"></ul>
+        </div>
+      </section>
+
+      <section class="card card--light">
+        <h2>Skattebraketter</h2>
+        <p>Modellen bruker følgende satser for å gi en rask oversikt:</p>
+        <ul class="brackets">
+          <li><strong>0 kr</strong> – 50 000 kr: 0 %</li>
+          <li><strong>50 001 kr</strong> – 100 000 kr: 10 %</li>
+          <li><strong>100 001 kr</strong> – 200 000 kr: 20 %</li>
+          <li><strong>200 001 kr</strong> +: 30 %</li>
+        </ul>
+      </section>
+    </main>
+
+    <script src="app.js"></script>
+  </body>
+</html>

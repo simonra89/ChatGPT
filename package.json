@@ -1,0 +1,10 @@
+{
+  "name": "tax-calculator",
+  "version": "1.0.0",
+  "description": "Simple client-side tax calculator",
+  "private": true,
+  "scripts": {
+    "dev": "python -m http.server 3000",
+    "start": "python -m http.server 3000"
+  }
+}
