@@ -17,16 +17,40 @@
       </header>
 
       <section class="card">
-        <h2>Inntekt</h2>
+        <h2>Inntekter og fradrag (2026)</h2>
+        <p class="note">
+          Legg inn dine tall. Aksjegevinster og aksjetap blir oppjustert etter
+          gjeldende faktor før skatt beregnes.
+        </p>
         <div class="form-grid">
           <label class="field">
-            Årsinntekt (brutto)
-            <input id="income" type="number" min="0" step="1000" value="600000" />
+            Lønnsinntekt
+            <input id="wage-income" type="number" min="0" step="1000" value="600000" />
           </label>
           <label class="field">
-            Fradrag
-            <input id="deductions" type="number" min="0" step="500" value="50000" />
+            Pensjonsinntekt
+            <input id="pension-income" type="number" min="0" step="1000" value="0" />
           </label>
+          <label class="field">
+            Kapitalinntekt
+            <input id="capital-income" type="number" min="0" step="500" value="15000" />
+          </label>
+          <label class="field">
+            Aksjegevinst
+            <input id="share-gain" type="number" min="0" step="500" value="20000" />
+          </label>
+          <label class="field">
+            Aksjetap
+            <input id="share-loss" type="number" min="0" step="500" value="5000" />
+          </label>
+          <label class="field">
+            Generelle fradrag
+            <input id="general-deductions" type="number" min="0" step="500" value="50000" />
+          </label>
+        </div>
+        <div id="rate-warning" class="warning" hidden>
+          Satser for 2026 er ikke komplett registrert. Oppdater konfigurasjonen
+          i <code>app.js</code> før du bruker kalkulatoren til nøyaktige beregninger.
         </div>
         <button id="calculate" class="primary">Beregn skatt</button>
       </section>
@@ -35,8 +59,8 @@
         <h2>Resultat</h2>
         <div class="result-grid">
           <div class="result">
-            <span class="result__label">Skattepliktig inntekt</span>
-            <strong id="taxable-income">–</strong>
+            <span class="result__label">Alminnelig inntekt</span>
+            <strong id="ordinary-income">–</strong>
           </div>
           <div class="result">
             <span class="result__label">Total skatt</span>
@@ -58,14 +82,13 @@
       </section>
 
       <section class="card card--light">
-        <h2>Skattebraketter</h2>
-        <p>Modellen bruker følgende satser for å gi en rask oversikt:</p>
-        <ul class="brackets">
-          <li><strong>0 kr</strong> – 50 000 kr: 0 %</li>
-          <li><strong>50 001 kr</strong> – 100 000 kr: 10 %</li>
-          <li><strong>100 001 kr</strong> – 200 000 kr: 20 %</li>
-          <li><strong>200 001 kr</strong> +: 30 %</li>
-        </ul>
+        <h2>Satser (2026)</h2>
+        <p class="note">
+          Kalkulatoren følger trinnskatt, trygdeavgift og skatt på alminnelig
+          inntekt slik de er definert i konfigurasjonen. Oppdater satsene i
+          <code>app.js</code> når Skatteetaten publiserer 2026-satsene.
+        </p>
+        <div id="rates-summary" class="rates-summary"></div>
       </section>
     </main>
 
