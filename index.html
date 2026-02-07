@@ -1,0 +1,111 @@
+<!doctype html>
+<html lang="no">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Skattekalkulator</title>
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <main class="app">
+      <header class="app__header">
+        <h1>Skattekalkulator</h1>
+        <p>
+          Beregn omtrentlig skatt med en enkel, progressiv modell. Denne
+          kalkulatoren er kun veiledende og erstatter ikke offisielle beregninger.
+        </p>
+      </header>
+
+      <section class="card">
+        <h2>Inntekter og fradrag (2026)</h2>
+        <p class="note">
+          Legg inn dine tall. Aksjegevinster og aksjetap blir oppjustert med
+          gjeldende faktor før skatt beregnes. Minstefradrag og personfradrag
+          legges til automatisk i beregningen.
+        </p>
+        <div class="form-grid">
+          <label class="field">
+            Lønnsinntekt
+            <input id="wage-income" type="number" min="0" step="1000" value="600000" />
+          </label>
+          <label class="field">
+            Pensjonsinntekt
+            <input id="pension-income" type="number" min="0" step="1000" value="0" />
+          </label>
+          <label class="field">
+            Aldersgruppe (trygdeavgift)
+            <select id="age-group">
+              <option value="17-69" selected>17–69 år</option>
+              <option value="under17-over69">Under 17 / over 69 år</option>
+            </select>
+          </label>
+          <label class="field">
+            Kapitalinntekt
+            <input id="capital-income" type="number" min="0" step="500" value="15000" />
+          </label>
+          <label class="field">
+            Aksjegevinst
+            <input id="share-gain" type="number" min="0" step="500" value="20000" />
+          </label>
+          <label class="field">
+            Aksjetap
+            <input id="share-loss" type="number" min="0" step="500" value="5000" />
+          </label>
+          <label class="field">
+            Region (alminnelig inntekt)
+            <select id="region">
+              <option value="standard" selected>Standard sats</option>
+              <option value="troms-finnmark">Troms/Finnmark (tiltakssone)</option>
+            </select>
+          </label>
+          <label class="field">
+            Generelle fradrag
+            <input id="general-deductions" type="number" min="0" step="500" value="50000" />
+          </label>
+          <label class="field">
+            Netto formue
+            <input id="net-wealth" type="number" min="0" step="10000" value="0" />
+          </label>
+        </div>
+        <button id="calculate" class="primary">Beregn skatt</button>
+      </section>
+
+      <section class="card">
+        <h2>Resultat</h2>
+        <div class="result-grid">
+          <div class="result">
+            <span class="result__label">Alminnelig inntekt</span>
+            <strong id="ordinary-income">–</strong>
+          </div>
+          <div class="result">
+            <span class="result__label">Total skatt</span>
+            <strong id="total-tax">–</strong>
+          </div>
+          <div class="result">
+            <span class="result__label">Effektiv skattesats</span>
+            <strong id="effective-rate">–</strong>
+          </div>
+          <div class="result">
+            <span class="result__label">Etter skatt</span>
+            <strong id="after-tax-income">–</strong>
+          </div>
+        </div>
+        <div class="breakdown">
+          <h3>Skattefordeling</h3>
+          <ul id="breakdown-list"></ul>
+        </div>
+      </section>
+
+      <section class="card card--light">
+        <h2>Satser (2026)</h2>
+        <p class="note">
+          Kalkulatoren følger trinnskatt, trygdeavgift, formuesskatt og skatt på
+          alminnelig inntekt med 2026-satsene som er lagt inn.
+        </p>
+        <div id="rates-summary" class="rates-summary"></div>
+      </section>
+    </main>
+
+    <script src="app.js"></script>
+  </body>
+</html>
