@@ -1,6 +1,6 @@
 # Læringsreisen
 
-En kjørbar utprøvingsversjon av en rolig læringsapp for 1.–4. trinn, bygget fra [produktplanen](docs/produktplan.md). Bokmål, tre fag, 48 aktive startmoduler og lokal fremgang. Ingen konto, server, annonser eller analyseverktøy.
+En kjørbar utprøvingsversjon av en rolig læringsapp for 1.–4. trinn, bygget fra [produktplanen](docs/produktplan.md). Bokmål, tre fag, 1 414 aktive oppgaver i 48 moduler og lokal fremgang. Ingen konto, server, annonser eller analyseverktøy.
 
 ## Bruk direkte i nettleseren
 
@@ -29,7 +29,7 @@ En service worker laster ned appskallet og alt inkludert innhold ved første bes
 1. Velg profilen øverst for å opprette en oppdager med kallenavn og figur. Standardprofilen kan endres i voksenområdet.
 2. Start dagens oppdrag, eller velg Norsk, Matte eller Engelsk. Økten viser først et eksempel som ikke vurderes, deretter oppgaver.
 3. Bruk hint, vis forklaring, hopp over eller ta pause. Ved ny oppstart finner dere økten med «Fortsett reisen». En avsluttet økt beholder registrerte forsøk.
-4. Åpne «For voksne». Første gang velger dere en lokal PIN med fire siffer. Still starttrinn separat i hvert fag og velg omtrent 5 eller 10 minutter. Ingen nedtelling brukes.
+4. Åpne «For voksne». Første gang velger dere en lokal PIN med fire siffer. Still starttrinn separat i hvert fag og velg 8, 12 eller 18 oppgaver per runde. Standard er 12. Ingen nedtelling brukes.
 5. Egne øveord legges inn og forhåndsvises i voksenområdet. Bekreft ordene før de brukes skriftlig under Norsk. Blandet repetisjon finnes under Min reise når barnet har øvd på noe.
 6. Eksporter regelmessig. JSON-filen inneholder alle profiler, observasjoner og lokal PIN-hash; oppbevar den privat. Import validerer filen og ber om bekreftelse før alle lokale data erstattes. Pågående økter gjenopprettes ikke ved import. Sletting fjerner bare valgt profil; siste profil krever at en annen opprettes først.
 
@@ -37,24 +37,24 @@ PIN er en praktisk foreldreport, ikke kryptering. Data ligger i nettleserens loc
 
 ## Faglig avgrensning
 
-Dette er **ikke en faglig godkjent eller ferdig førsteversjon** etter hele planen. [Innholdsoversikten](docs/innhold.md) skiller det som finnes fra det som gjenstår.
+Dette er **en utprøvingsversjon som ikke er faglig lærergodkjent**. Oppgavepakke 2 er internt gjennomgått og vesentlig utvidet; [kvalitetsgjennomgangen](docs/kvalitetsgjennomgang.md) beskriver konkrete funn og rettelser. [Innholdsoversikten](docs/innhold.md) skiller det som finnes fra det som gjenstår.
 
 - Åpne tekster, muntlige aktiviteter og praktisk arbeid registreres som «øvd på». Voksenbekreftelse er gjennomføring, ikke automatisk mestring.
 - Hint, fasitvisning, flytting i strategimodellen og opplesning av lesetekst registreres som faglig støtte. Instruksjonslyd påvirker ikke resultatet.
 - Førstesvaret lagres én gang, også ved dobbelttrykk. Demonstrasjonen og like eksempler utelates fra økten. Identisk innhold samme dag gir ikke flere mestringsbevis.
-- Bare pakker med minst ti ulike eksempler og endret kontekst kan oppnå «får til selv». Det krever ti kvalifiserte observasjoner, minst åtte riktige, minst to dager, minst åtte ulike eksempler og riktig overføringsoppgave. Små språkpakker og repeterte formmønstre kan ikke oppnå statusen.
+- Bare automatisk vurderbare pakker med minst ti uavhengige kontekster og endret situasjon kan oppnå «får til selv». Det krever ti kvalifiserte observasjoner, minst åtte riktige, minst to dager, minst åtte ulike eksempler og riktig overføringsoppgave. Moduler med åpne eller muntlige oppdrag får ingen samlet automatisk mestringsstatus. Flere spørsmål om samme tekst regnes som én uavhengig kontekst per dag. Ren kopieringsøving teller ikke som selvstendig mestring.
 - Repetisjon foreslås senere uten poengtap eller oppgavegjeld. Intervallene 1, 3, 7 og 14 dager er foreløpige produktregler.
 - Passende nettleserstemme kan lese instruksjoner og lesetekster. Manglende stemme gir melding. **Godkjente bokstavlyder og engelske lydmodeller er ikke inkludert.** Slike aktiviteter har et eksplisitt voksenalternativ og dokumenterer ikke automatisk lytteforståelse eller uttale.
 
 ## Struktur
 
-- `src/content.ts`: 48 moduler, matematiske maler og små tekst-/språkpakker.
+- `src/content.ts` og `src/content-*-v2.ts`: 48 moduler og 1 414 oppgaver. `src/content-v1.ts` bevarer gamle oppgavedefinisjoner for eksisterende fremgang og pauseøkter.
 - `src/engine.ts`: oppgavevalg, repetisjon, progresjon, importvalidering og PIN-hash.
 - `src/types.ts`: innhold, observasjoner, profiler og økter.
 - `src/storage.ts`: lokal lagring og eksport.
-- `src/App.tsx`: skjermflyt, voksenområde og oppgaverenderere.
+- `src/App.tsx`: skjermflyt og voksenområde. `src/TaskAnswer.tsx`, `src/TaskVisual.tsx` og `src/assessment.ts` håndterer svarformer, visuelle modeller og vurdering.
 - `src/Art.tsx`, `src/style.css`: lokale illustrasjoner og responsive stiler. Ingen eksterne fonter eller bilder.
-- `scripts/offline.mjs`: offlinepakke med hash av byggets innhold. Oppdateringer aktiveres når gammel app er lukket. Ved faglige endringer må innholds-/observasjonsversjon migreres eksplisitt; ikke endre betydningen av gamle oppgave-ID-er stille.
+- `scripts/offline.mjs`: offlinepakke med hash av byggets innhold. Oppdateringer aktiveres når gammel app er lukket, eller når brukeren velger «Oppdater appen». Ved faglige endringer må innholds-/observasjonsversjon migreres eksplisitt; ikke endre betydningen av gamle oppgave-ID-er stille.
 
 ## Kontroller
 
@@ -66,6 +66,6 @@ npx playwright test
 
 Playwright bruker `/usr/bin/chromium` i skymiljøet. Tilpass `executablePath` eller installer Playwrights Chromium på andre maskiner. Nettleser og lokale servere trenger tillatelse til lokale sockets.
 
-11 regel-/innholdstester og 10 nettleserkontroller bestod. De dekker øktflyt, hint, pause, ny oppstart, profilskille, PIN, nivåvalg, eksport, import med bekreftelse, sletting, alle tolv fag-/trinnskombinasjoner, mobilbredde, offlineoppstart, egne øveord, blandet repetisjon og separate pauseøkter for søsken, GitHub Pages-prosjektstien og valgfri Android-veiledning. Skjermbilder er også kontrollert visuelt. Bygget er typekontrollert.
+Innholds-, vurderings-, migrerings- og nettlesertester dekker de nye oppgavene. De dekker øktflyt, hint, pause, ny oppstart, profilskille, PIN, nivåvalg, eksport, import med bekreftelse, sletting, alle tolv fag-/trinnskombinasjoner, mobilbredde, offlineoppstart, egne øveord, blandet repetisjon og separate pauseøkter for søsken, GitHub Pages-prosjektstien og valgfri Android-veiledning. Skjermbilder er også kontrollert visuelt. Bygget er typekontrollert.
 
 Fysisk telefon, iOS/Safari, hjemskjerminstallasjon, faktiske stemmer og pedagogisk kvalitet er ikke verifisert. Gjennomfør planens lærer- og barneutprøving før ordinær bruk.
